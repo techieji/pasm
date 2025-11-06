@@ -74,7 +74,7 @@ class Pointer:
     def resolve(self) -> None:
         if self.dest is None:
             raise ValueError("Cannot resolve without destination!")
-        if not all(dest.binimage is self.dest.binimage for dest in self.uses):
+        if not all(dest.binimage is self.dest.binimage for dest in self.uses): # FIXME clarify variable naming
             raise ValueError("Not all uses are resolved!")
         for use in self.uses:
             use.binimage[use.idx:use.idx+self.size] = self.repr
