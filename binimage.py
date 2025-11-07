@@ -14,9 +14,7 @@ class BinaryImage(bytearray):
         self.refs_to: list[Pointer] = []      # The place where the pointer is used
 
     def pointer_at(self, size: int, i: int) -> Pointer:
-        p = Pointer(size, Location(self, i))
-        self.refs_from.append(p)
-        return p
+        return Pointer(size, Location(self, i))
 
     def extend(self, v: Any) -> None:
         if isinstance(v, BinaryImage):
@@ -34,9 +32,8 @@ class BinaryImage(bytearray):
         This method changes all pointers in the second binary image to point from and to
         this one: pointer resolution will only modify this image, not the other.'''
         for p in v.refs_from:
-            if p.dest is not None:
+            if p.dest is not None:     # For type safety
                 p.set_dest(self, len(self) + p.dest.idx)
-                self.refs_from.append(p)
         for p in v.refs_to:
             for use in p.uses:
                 if use.binimage is v:
@@ -55,7 +52,10 @@ class Pointer:
     def __init__(self, size: int, dest: Optional[Location] = None):
         self.size = size
         self.uses: list[Location] = []
-        self.dest = dest
+        if dest is not None:
+            self.set_dest(dest.binimage, dest.idx)
+        else:
+            self.dest = None
 
     @property
     def repr(self) -> bytes:
@@ -81,3 +81,4 @@ class Pointer:
 
     def set_dest(self, binimage: BinaryImage, idx: int) -> None:
         self.dest = Location(binimage, idx)
+        binimage.refs_from.append(self)
